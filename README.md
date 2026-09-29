@@ -1,7 +1,7 @@
 # jevaudit — 通用校准审计器
 
 > Audit ANY decision model, not just Jev.
-> decide → 三指纹账本 → Brier + 基线 + 校准曲线报告。
+> decide → HCTDIP 物理闸门 → 三指纹账本 → Brier + 基线 + 校准曲线报告。
 
 ## Why
 
@@ -18,7 +18,7 @@
 ## Install
 
 ```bash
-pip install jevaudit   # (after publish — for now: copy the jevaudit/ directory)
+pip install jevaudit
 ```
 
 ## Quickstart
@@ -32,7 +32,7 @@ add_record("ledger.jsonl", {
     "id": "dec-001",
     "input_hash": input_hash(state, questions),   # sha256(规范输入)[:32]
     "output_hash": output_hash(response),         # sha256(响应)[:32]
-    "code_hash": code_hash(),                     # sha256(判定脚本)[:16]
+    "code_hash": code_hash(),                     # 默认哈希当前主脚本
     "p": 0.95,                                    # 模型给的置信度
     "outcome": 1,                                 # 真实回填结果 (1/0)
     "check_spec": {"baseline": "implied_price", "tick": 0.01},  # 用的什么基准
@@ -47,6 +47,77 @@ report(rows, "calibration_report.md")   # 产出 Markdown（含 0.25 基线对�
 # 3) 门控：KEEP / CONFIRM / DROP
 action = gate2(0.75)   # KEEP (>=0.7) / CONFIRM (0.3-0.7) / DROP (<0.3)
 ```
+
+## HCTDIP 物理闸门（0.2.0 新增）
+
+两层闸门，分工不同，不互相替代：
+
+| 层 | 函数 | 判什么 | 输出 |
+|---|---|---|---|
+| 物理层 | `hctdip.gate(state, decision)` | 延迟 / 因果链 / 算力 / 越界——系统在物理上安不安全 | ACT / VETO + 理由码 |
+| 置信层 | `gate2(p)` | 按 p 分档 | KEEP / CONFIRM / DROP |
+
+先过物理层，ACT 之后才进置信层。物理层不评判决策内容。
+
+| 理由码 | 条件 |
+|---|---|
+| `BOUNDARY` | `boundary_violation` 为真，或决策值非数字 / NaN / 越出 [0,1] / 空 |
+| `A4_NO_CAUSAL_TRACE` | 缺响应 id / usage / p |
+| `A1_DELAY` | `latency > max_latency`（默认 1.5s） |
+| `A6_COMPUTE` | `compute_usage > compute_limit`（默认 440 input tokens，按 100 条真实调用校准） |
+
+```python
+from jevkit import Client
+from jevaudit import audited_call, hctdip
+
+c = Client()  # 读 OPENROUTER_API_KEY
+q = {"resolve_yes": {"type": "noul", "instructions": "Will X happen?",
+                     "criteria": {"true": "X happens", "false": "X does not"}}}
+out = audited_call(lambda: c.decide(q, state="..."), ledger_path="ledger.jsonl",
+                   record_id="dec-001", inputs=q)
+if out["gate"]["decision"] == "ACT":
+    ...  # 再交给 gate2(out["p"]) / 执行层
+rows = load_ledger("ledger.jsonl")
+print(hctdip.scorecard(rows, known_code_hashes={rows[0]["code_hash"]: "my runner v1"}))
+```
+
+调用抛异常 → 无决策值 + 无因果记录 → 必然 VETO，不会放行。
+
+**实测**（2026-09-29）：100 条真实 Jev 调用全部 ACT（延迟最高 0.74s，tokens 最高 400）；
+100 条物理故障注入（A1/A4/A6/BOUNDARY 各 25）拦截 100%，正常对照组 0 误拦。
+两组数据都在 `tests/data/`，测试逐条复现闸门结论。
+
+### 因果记录 + 审计前置验证（0.2.0）
+
+每次 `gate()` 返回 `gate_evidence`，4 条规则各一条，ACT 也记：
+
+```json
+{"rule": "A1_DELAY", "check": "latency <= max_latency (s)", "value": 0.33, "limit": 1.5, "passed": true, "ts": "2026-09-29T15:14:35.356Z"}
+```
+
+出成绩单前必须过两条验证，任何一条不通过 → `AuditRejected`（拒审）：
+
+```python
+from jevaudit import require_verified, AuditRejected
+KNOWN = {"src-0daa5ad4e46b": "runner v1", "src-...": "runner v2"}   # 已知版本指纹登记表（历史版本也登记）
+try:
+    require_verified(rows, KNOWN)   # = verify_ledger_integrity + verify_causal_completeness
+except AuditRejected as e:
+    print(e.report)                 # 逐条失败明细
+```
+
+- `verify_ledger_integrity()`：用账本里存的 `input_payload` / `raw_response` 重算 input_hash / output_hash；code_hash 必须在登记表里（不给登记表 = 全部失败，fail-closed）
+- `verify_causal_completeness()`：4 条证据齐全、字段齐全、passed 与 value/limit 自洽、ACT/VETO 与证据一致；`audit_mode` 必须是 LIVE / REPLAY，REPLAY 必须同时有 `call_ts` 和 `replay_ts`
+
+### physical_gate（并入自 0.1.1）
+
+```python
+from jevaudit import require_task_env, log_action
+task, agent = require_task_env()          # 缺 R0T_TASK_ID / R0T_AGENT_ID → exit 2
+log_action(task, agent, "hctdip:VETO", evidence=gate_result)   # 目录：参数 > R0T_LOG_DIR > /var/minis/shared/logs/r0t
+```
+
+`audited_call(..., task_id=task, agent_id=agent)` 会自动把每次闸门结果连同证据写进 R0-T 日志。
 
 ## Gotchas（三轮实战沉淀，踩不到的坑）
 

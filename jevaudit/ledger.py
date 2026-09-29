@@ -25,9 +25,11 @@ def output_hash(response) -> str:
 
 
 def code_hash(script_path: str = None) -> str:
-    """指纹 3：sha256(判定脚本字节)[:16]，src- 前缀。
-    默认取调用方脚本（sys.argv[0]），显式传 path 优先；
-    无法定位时如实返回 src-unavailable，不假装。
+    """指纹 3：sha256(判定脚本字节)[:12]，src- 前缀。是不是我们改了逻辑。
+
+    采用 0.1.1 语义（2026-09-29 合并）：显式 path 优先；默认取调用方脚本 sys.argv[0]；
+    定位不到如实返回 src-unavailable，不假装。（0.1.1 注释写 [:16]，实际代码一直是 [:12]，已更正注释。）
+    hctdip.audited_call() 在拿到 src-unavailable 时改哈希实际执行判定的 hctdip.py，并在记录里写明来源。
     """
     p = script_path
     if not p:
