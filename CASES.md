@@ -73,16 +73,18 @@ python -m jevaudit.audit reconcile --ledger-glob 'ledgers/chain_listener_*.jsonl
   --wallets wallets.json --known-code-hash <listener sha256> --out-dir reconcile
 ```
 
-### 证据（私有仓库 HCTDIP/openship-fork）
+### 证据（[HCTDIP/openship-fork](https://github.com/HCTDIP/openship-fork)，原始文件，未加工）
 
 | 文件 | sha256 |
 |---|---|
-| `raw/ledger/chain_listener_20261002.jsonl.gz` | `5d57a98d53052c4f9490f6478ebaa2b3917282207dfae21fdca0fe01bf3a7e22` |
-| `raw/ledger/chain_listener_20261003.jsonl.gz` | `16fce6de4b5ec6217aa94da677c00b01462eed506eda63bfb1773401603b7be5` |
-| `raw/ledger/chain_listener_status.json` | `655737071dfdc559169157dc8985216744cd6c504e0f0c7075303ff63b42d854` |
-| `raw/ledger/chain_listener_events.jsonl` | `5f0a56dd7904f471a0d2c8a311d25139d9e0c332f7badfccb28cc25edd71d576` |
-| `raw/repull/gl/94834179.parquet`（含 94834428） | `18aee44d15a7c256bf7eb5c2c4a974e25535bf12ca7b9d1a5d08b3e2e0896b1c` |
-| `raw/repull/gl/94840179.parquet`（含 94840332） | `db1d3fdb9572c429877f1471c5cc618b2b8a847f6739971ccb2f47957eb27c33` |
-| `raw/repull/gl/94862679.parquet`（含 94862944） | `1c378bcd5b0ec8aa0d26bfb40487628ee4749a41cf05cda155ab9014dbc6b398` |
-| `raw/repull/gl/94875279.parquet`（含 94875380、94875386） | `d45ad9818f2111a3008f8f737c8a8f5f88fcde66f2cc17a244dfe57cf4c529d6` |
-| `listener/listener.py`（v3） | `0bd0618033e0ba07147406c3a4a63fff89999ca8bf47544aaeeb0bd88bd2eb99` |
+| [`raw/ledger/chain_listener_20261002.jsonl.gz`](https://github.com/HCTDIP/openship-fork/blob/main/raw/ledger/chain_listener_20261002.jsonl.gz) | `5d57a98d53052c4f9490f6478ebaa2b3917282207dfae21fdca0fe01bf3a7e22` |
+| [`raw/ledger/chain_listener_20261003.jsonl.gz`](https://github.com/HCTDIP/openship-fork/blob/main/raw/ledger/chain_listener_20261003.jsonl.gz) | `16fce6de4b5ec6217aa94da677c00b01462eed506eda63bfb1773401603b7be5` |
+| [`raw/ledger/chain_listener_status.json`](https://github.com/HCTDIP/openship-fork/blob/main/raw/ledger/chain_listener_status.json) | `655737071dfdc559169157dc8985216744cd6c504e0f0c7075303ff63b42d854` |
+| [`raw/ledger/chain_listener_events.jsonl`](https://github.com/HCTDIP/openship-fork/blob/main/raw/ledger/chain_listener_events.jsonl) | `5f0a56dd7904f471a0d2c8a311d25139d9e0c332f7badfccb28cc25edd71d576` |
+| [`raw/repull/gl/94834179.parquet`](https://github.com/HCTDIP/openship-fork/blob/main/raw/repull/gl/94834179.parquet)（含 94834428） | `18aee44d15a7c256bf7eb5c2c4a974e25535bf12ca7b9d1a5d08b3e2e0896b1c` |
+| [`raw/repull/gl/94840179.parquet`](https://github.com/HCTDIP/openship-fork/blob/main/raw/repull/gl/94840179.parquet)（含 94840332） | `db1d3fdb9572c429877f1471c5cc618b2b8a847f6739971ccb2f47957eb27c33` |
+| [`raw/repull/gl/94862679.parquet`](https://github.com/HCTDIP/openship-fork/blob/main/raw/repull/gl/94862679.parquet)（含 94862944） | `1c378bcd5b0ec8aa0d26bfb40487628ee4749a41cf05cda155ab9014dbc6b398` |
+| [`raw/repull/gl/94875279.parquet`](https://github.com/HCTDIP/openship-fork/blob/main/raw/repull/gl/94875279.parquet)（含 94875380、94875386） | `d45ad9818f2111a3008f8f737c8a8f5f88fcde66f2cc17a244dfe57cf4c529d6` |
+| [`listener/listener.py`](https://github.com/HCTDIP/openship-fork/blob/main/listener/listener.py)（v3） | `0bd0618033e0ba07147406c3a4a63fff89999ca8bf47544aaeeb0bd88bd2eb99` |
+
+全部文件的 sha256 清单：[`SHA256SUMS.txt`](https://github.com/HCTDIP/openship-fork/blob/main/SHA256SUMS.txt)。克隆后在仓库根目录 `sha256sum -c SHA256SUMS.txt` 即可复核（fills.parquet 以 .gz 存放，见 MANIFEST_NOTES.txt）；10-05 新增文件见 `SHA256SUMS_20261005.txt`。
