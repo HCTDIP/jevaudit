@@ -141,3 +141,19 @@ log_action(task, agent, "hctdip:VETO", evidence=gate_result)   # 目录：参数
 ## License
 
 MIT
+
+## 独立对账 `jevaudit.audit`（未发布到 PyPI，源码安装）
+
+闸门只能审到了它面前的记录，审不到从没写进账本的记录。`jevaudit.audit` 在事后拿独立来源重读一遍再对账：
+
+- `verify_ledger_integrity(records, known_code_hashes)`：逐条核对 output_hash，code_hash 必须登记，查重复。
+- `reconcile_with_chain(records, rpcs, lo, hi, wallets)`：区块 lo..hi 从链上重拉，和账本逐笔比；
+  有差异的区块再问 3 个独立节点，按多数结果定；input_hash 用原始链上 log 重算。节点没答复记为「无答复」，不当成「没有数据」。
+
+```bash
+pip install "jevaudit @ git+https://github.com/HCTDIP/jevaudit"
+python -m jevaudit.audit reconcile --ledger-glob 'ledgers/*.jsonl.gz' --wallets wallets.json \
+  --known-code-hash <sha256> --out-dir reconcile
+```
+
+真实案例见 [CASES.md](CASES.md)：监听器自报完整，独立对账发现 61 笔缺口。

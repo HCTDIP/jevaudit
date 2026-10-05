@@ -20,5 +20,5 @@ classifiers = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["jevaudit"]
+include = ["jevaudit", "jevaudit.*"]
 exclude = ["tests*"]

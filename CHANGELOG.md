@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased（仅 GitHub，未发 PyPI，版本号不变）— 2026-10-05
+- **新增** `jevaudit/audit/`：`verify_ledger_integrity()`（链上成交账本三指纹）、`reconcile_with_chain()`（3 个独立 RPC 逐笔对账）、
+  CLI `python -m jevaudit.audit reconcile`（增量游标 `cursor.json`，输出 json + md）。只用标准库。
+  节点答复里出现请求范围以外的区块 → 整次答复作废（2026-10-03 事故的实际表现）。
+- **改动** `pyproject.toml` packages.find 加 `jevaudit.*`，否则子包 `jevaudit.audit` 装不进去。
+- **新增** `tests/test_audit_chain.py`（7 个离线测试，mock RPC）。
+- **新增** `CASES.md` + `cases/2026-10-03-tip-race/missing_fills.csv`（61 笔，sha256 7e3f2074）。
+- 未改：`hctdip` / `gating` / `verify` / 闸门参数（A1 1.5s、A6 440、BOUNDARY）。
+- 已知：`tests/test_hctdip.py::test_code_hash_default_fixed` 在 `pytest` 入口下本来就失败（main 上未改动时同样失败），本次未处理。
+
 ## 0.2.0 — 2026-09-29
 - **新增** 因果记录：`hctdip.gate()` 每次返回 `gate_evidence`（4 条规则各一条：rule / check / value / limit / passed / ts），
   ACT 也全量记录；`audited_call()` 账本新增 `gate_evidence`、`audit_mode`（LIVE/REPLAY）、`call_ts`、`input_payload`、
